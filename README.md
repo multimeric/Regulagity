@@ -41,9 +41,13 @@ Options:
 
 ## Examples
 * What proportion of months have had any commit activity since this repo was created?
-    `regulagity --period M --stat proportion https://github.com/TMiguelT/Regulagity.git`
+    ```
+    regulagity --period M --stat proportion https://github.com/TMiguelT/Regulagity.git
+    ```
 * What is the average commits per fortnight in this repo?
-    ` regulagity --period 2W --stat count /home/michael/Programming/Regulargity`
+    ```
+    regulagity --period 2W --stat count /home/michael/Programming/Regulargity
+    ```
     
 ## Motivation
 There are numerous other tools that summarise git activity, for example:
@@ -75,3 +79,4 @@ Planned features:
 * Allow calculation of average lines-of-code, not just commit numbers
 * Allow custom date-ranges for the query, e.g. "in the last year" rather than "for the 
     entire commit history"
+* Allow specifying a branch, or assessing over all branches
