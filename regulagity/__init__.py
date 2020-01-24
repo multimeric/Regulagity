@@ -21,7 +21,7 @@ from git import Repo
          'refer to http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases')
 @click.option(
     '--stat',
-    default='bool',
+    default='proportion',
     type=click.Choice(['proportion', 'count']),
     help='The way we summarise each commit over the time period. '
          '`proportion` indicates that we should calculate what proportion of the time period has any commits (e.g. how '
@@ -42,7 +42,8 @@ def main(location, period, stat):
     """
     if path.exists(location):
         # If the user provided a filepath, that's the git repo
-        print('Provided path was a real directory, checking for git repository...', file=sys.stderr)
+        print('Provided path was a real directory, checking for git repository...',
+              file=sys.stderr)
         repo = Repo(location)
         tempd = None
     else:
@@ -51,8 +52,11 @@ def main(location, period, stat):
         tempd = tempfile.TemporaryDirectory()
         repo = Repo.clone_from(location, tempd.name)
 
+    # Get the offset object for making a human readable message
     offset = frequencies.to_offset(period)
 
+    # Extract a series of commit dates from the repo, and then group them by the provided
+    # period
     commits = pandas.Series(repo.iter_commits(), dtype=pandas.np.object_)
     dates = pandas.to_datetime(
         commits.apply(lambda commit: commit.committed_date),
@@ -61,18 +65,28 @@ def main(location, period, stat):
     df = pandas.DataFrame({'commits': commits, 'dates': dates})
     counts = df.groupby(pandas.Grouper(freq=period, key='dates')).count()
 
-    if stat == 'bool':
+    # Extend the counts to present day
+    counts = counts.reindex(counts.index.union(pandas.DatetimeIndex(
+        start=counts.index.min(),
+        end=pandas.datetime.today(),
+        freq=period
+    )), fill_value=0)
+
+    if stat == 'proportion':
         result = counts['commits'].apply(lambda count: 0 if count == 0 else 1).mean()
-        print('Calculating the proportion of each {} {} period with any git activity'.format(
-            offset.n,
-            type(offset).__name__.lower()
-        ), file=sys.stderr)
-    else:
+        print(
+            'Calculating the proportion of each {} {} period with any git activity'.format(
+                offset.n,
+                type(offset).__name__.lower()
+            ), file=sys.stderr)
+    elif stat == 'count':
         result = counts.mean()[0]
         print('Calculating average commits per {} {} period'.format(
             offset.n,
             type(offset).__name__.lower()
         ), file=sys.stderr)
+    else:
+        raise Exception('Invalid --stat value')
 
     print(result)
 
