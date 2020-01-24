@@ -21,7 +21,7 @@ setup(
         'Topic :: Software Development :: Version Control',
         'Topic :: Software Development :: Version Control :: Git'
     ],
-    version='0.0.1',
+    version='0.0.2',
     packages=find_packages(),
     install_requires=[
         'gitpython',
