@@ -45,7 +45,7 @@ Options:
 * What is the average commits per fortnight in this repo?
     ` regulagity --period 2W --stat count /home/michael/Programming/Regulargity`
     
-# Motivation
+## Motivation
 There are numerous other tools that summarise git activity, for example:
 
 * <http://gitstats.sourceforge.net/>
@@ -69,8 +69,7 @@ means a better amount of support. You can even use this same statistic to compar
 source repos to commercial products, because you can also ask "what proportion of months
 have a new update to this software?".
 
-# Roadmap
-
+## Roadmap
 Planned features:
 
 * Allow calculation of average lines-of-code, not just commit numbers
