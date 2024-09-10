@@ -2,43 +2,29 @@ import tempfile
 import sys
 from os import path
 
-import click
 import pandas
 from pandas.tseries import frequencies
+from pandas import Series, date_range
 from git import Repo
+from datetime import datetime
+from typer import Option, Argument, Typer
+from typing import Annotated
+from enum import Enum
 
+class StatChoice(Enum):
+    proportion = "proportion"
+    count = "count"
 
-@click.command()
-@click.argument(
-    'location',
-    default='.'
-)
-@click.option(
-    '--period',
-    default='M',
-    help='Period of time to summarise commits over. This consists of an optional number followed by a letter code, e.g.'
-         ' `2W` means two weeks, `3M` means 3 months, `Y` means 1 year etc. For a full reference on these string codes, '
-         'refer to http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases')
-@click.option(
-    '--stat',
-    default='proportion',
-    type=click.Choice(['proportion', 'count']),
-    help='The way we summarise each commit over the time period. '
-         '`proportion` indicates that we should calculate what proportion of the time period has any commits (e.g. how '
-         'many weeks on average have any activity) whereas `count` indicates that we should take the average number of '
-         'commits in this time period (e.g. how many commits are on average made per week)'
-)
-# @click.option(
-#     '--measure',
-#     default='commits',
-#     type=click.Choice(['commits', 'locs']),
-#     help='The object to count. Either commits or lines of code (locs)'
-# )
-def main(location, period, stat):
+app = Typer()
+
+@app.command()
+def main(
+    location: Annotated[str, Argument(help="The path either to a local git repository or to a git remote, e.g. `/home/michael/Programming/Regulagity/` or `https://github.com/TMiguelT/Regulagity.git`")] = ".",
+    period: Annotated[str, Option(help='Period of time to summarise commits over. This consists of an optional number followed by a letter code, e.g. `2W` means two weeks, `3M` means 3 months, `Y` means 1 year etc. For a full reference on these string codes, refer to http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases')] = "W",
+    stat: Annotated[StatChoice, Option(help = 'The way we summarise each commit over the time period. `proportion` indicates that we should calculate what proportion of the time period has any commits (e.g. how many weeks on average have any activity) whereas `count` indicates that we should take the average number of commits in this time period (e.g. how many commits are on average made per week)')] = StatChoice.proportion
+):
     """
-        Calculates summary statistics for the git repository located at LOCATION. LOCATION must be the path either
-        to a local git repository or to a git remote, e.g. `/home/michael/Programming/Regulagity/` or
-        `https://github.com/TMiguelT/Regulagity.git`
+    Calculates commit frequency statistics for a git repository. 
     """
     if path.exists(location):
         # If the user provided a filepath, that's the git repo
@@ -54,10 +40,12 @@ def main(location, period, stat):
 
     # Get the offset object for making a human readable message
     offset = frequencies.to_offset(period)
+    if offset is None:
+        raise Exception(f"Invalid offset {offset}")
 
     # Extract a series of commit dates from the repo, and then group them by the provided
     # period
-    commits = pandas.Series(repo.iter_commits(), dtype=pandas.np.object_)
+    commits = Series(repo.iter_commits(), dtype=object)
     dates = pandas.to_datetime(
         commits.apply(lambda commit: commit.committed_date),
         unit='s'
@@ -66,33 +54,27 @@ def main(location, period, stat):
     counts = df.groupby(pandas.Grouper(freq=period, key='dates')).count()
 
     # Extend the counts to present day
-    counts = counts.reindex(counts.index.union(pandas.DatetimeIndex(
+    counts = counts.reindex(counts.index.union(date_range(
         start=counts.index.min(),
-        end=pandas.datetime.today(),
+        end=datetime.today(),
         freq=period
     )), fill_value=0)
 
-    if stat == 'proportion':
+    if stat == StatChoice.proportion:
         result = counts['commits'].apply(lambda count: 0 if count == 0 else 1).mean()
         print(
             'Calculating the proportion of each {} {} period with any git activity'.format(
                 offset.n,
                 type(offset).__name__.lower()
             ), file=sys.stderr)
-    elif stat == 'count':
+    elif stat == StatChoice.count:
         result = counts.mean()[0]
         print('Calculating average commits per {} {} period'.format(
             offset.n,
             type(offset).__name__.lower()
         ), file=sys.stderr)
-    else:
-        raise Exception('Invalid --stat value')
 
     print(result)
 
     if tempd:
         tempd.cleanup()
-
-
-if __name__ == "__main__":
-    main()
