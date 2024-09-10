@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "regulagity"
+authors = [
+    {name = "Michael Milton", email = "michael.r.milton@gmail.com"},
+]
+description = "A tool for measuring the activity of a git repo using a variety of single summary statistics"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "LGPLv3+"}
+classifiers = [
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Topic :: Software Development :: Version Control',
+        'Topic :: Software Development :: Version Control :: Git'
+]
+version='0.0.3'
+dependencies = [
+    'gitpython',
+    'typer',
+    'pandas>2'
+]
+
+[project.scripts]
+regulagity = "regulagity:app"
+
+[tool.pyright]
+reportUnknownVariableType = false
+reportUnknownMemberType = false
