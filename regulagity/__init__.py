@@ -20,7 +20,7 @@ app = Typer()
 @app.command()
 def main(
     location: Annotated[str, Argument(help="The path either to a local git repository or to a git remote, e.g. `/home/michael/Programming/Regulagity/` or `https://github.com/TMiguelT/Regulagity.git`")] = ".",
-    period: Annotated[str, Option(help='Period of time to summarise commits over. This consists of an optional number followed by a letter code, e.g. `2W` means two weeks, `3M` means 3 months, `Y` means 1 year etc. For a full reference on these string codes, refer to http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases')] = "W",
+    period: Annotated[str, Option(help='Period of time to summarise commits over. This consists of an optional number followed by a letter code, e.g. `2W` means two weeks, `3ME` means 3 months, `YE` means 1 year etc. For a full reference on these string codes, refer to http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases')] = "W",
     stat: Annotated[StatChoice, Option(help = 'The way we summarise each commit over the time period. `proportion` indicates that we should calculate what proportion of the time period has any commits (e.g. how many weeks on average have any activity) whereas `count` indicates that we should take the average number of commits in this time period (e.g. how many commits are on average made per week)')] = StatChoice.proportion
 ):
     """
